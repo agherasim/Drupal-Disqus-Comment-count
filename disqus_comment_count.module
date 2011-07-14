@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * Implementation of hook_cron()
+ */
+function disqus_comment_count_cron() {  
+  disqus_comment_count_sync();
+}
+
+/**
+ * Perform comment count synchronization
+ */
+function disqus_comment_count_sync() {
+  $since = variable_get('disqus_comment_count_last_sync', '2011-05-30T00:00');
+  //$total_syncs_in_last_hour = variable_get('disqus_comment_count_total_syncs');
+  $user_api_key = variable_get('disqus_userapikey', '');
+  $domain = variable_get('disqus_domain', '');
+  
+  // @var Disqus $disqus
+  $disqus = disqus($user_api_key);
+  $forums = $disqus->get_forum_list();
+  $threads = array();
+  
+  foreach ($forums as $forum) {
+    if ($forum->shortname == $domain) {      
+      try {
+        $threads = $disqus->get_updated_threads($forum->id, $since);
+      } catch (Exception $e) {
+        echo $e->getMessage();
+      }
+      break;
+    }
+  }
+  
+  if (!empty($threads)) {
+    foreach ($threads as $thread) {
+      $nid = str_replace('node/', '', $thread->identifier[0]);
+      _update_comment_count($nid, $thread->num_comments);
+    }
+  }
+  
+  variable_set('disqus_comment_count_last_sync', format_date(time(), 'custom', 'Y-m-d\TH:i', 'UTC'));
+}
+
+function _update_comment_count($nid, $count) {
+  db_query("UPDATE {node_comment_statistics} SET comment_count = %d 
+      WHERE nid = %d", $count, $nid);
+}

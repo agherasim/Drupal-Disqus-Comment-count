@@ -1,0 +1,5 @@
+name = Disqus Comment Count
+description = "Set node comment count to Disqus comment count"
+core = 6.x
+version = 1.0
+dependencies[] = disqus
