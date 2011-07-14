@@ -1,0 +1,3 @@
+This Drupal 6 module allows to update the node comments statistics using the Disqus API (if using the Disqus comments module).
+
+It is set to run on cron. It retrieves the list of updated threads and updates node comments statistics accordingly. The update is required if you want to create views and sort nodes based on the comments count, but you are using Disqus for comments.
